@@ -4,28 +4,55 @@ const port = 3000;
 const app = express();
 app.use(express.json());
 
+// variável em memória para simular usuários cadastrados no banco de dados
+let usuarios = [];
+
 app.get('/usuarios', (req, res) => {
-  console.log(req.query);
-  res.send('Chamou o GET!');
+  let resultado = usuarios;
+  // faz o filtro se receber ?filtro=exemplo
+  if (req.query.filtro) {
+    resultado = usuarios.filter((u) => {
+      return u.nome.includes(req.query.filtro);
+    });
+  }
+  res.send(resultado);
 });
 
 app.post('/usuarios', (req, res) => {
-  console.log(req.body);
-  res.send({ mensagem: `Chamou o POST com o nome: ${req.body.nome}` });
+  if (!req.body || !req.body.nome || !req.body.email) {
+    res.status(400).send('Os campos nome e email são obrigatórios!');
+    return;
+  }
+  const usuarioJaExiste = usuarios.find((usu) => usu.email === req.body.email);
+  if (usuarioJaExiste) {
+    res.status(409).send('Usuário já cadastrado!');
+    return;
+  }
+  // Vamos gerar um id aleatório apenas de exemplo com +new Date()
+  const novoUsuario = { ...req.body, id: +new Date() };
+
+  usuarios.push(novoUsuario);
+  res.status(201).send(novoUsuario);
 });
 
 app.put('/usuarios', (req, res) => {
-  console.log(req.headers);
-  if (!req.headers.autorizacao) {
-    res.status(401).send('Informe o HEADER "autorizacao"');
-  } else {
-    res.send('Chamou o PUT!');
-  }
+  usuarios = usuarios.map((xxx) => {
+    if (xxx.id === req.body.id) {
+      return req.body;
+    } else {
+      return xxx;
+    }
+  });
+
+  res.send('Operação efeutada com sucesso!');
 });
 
-app.delete('/usuarios/:id', (req, res) => {
-  console.log(req.params);
-  res.send(`Chamou o DELETE com id: ${req.params.id}`);
+app.delete('/usuarios/:idUsuario', (req, res) => {
+  usuarios = usuarios.filter((xxx) => {
+    return xxx.id !== +req.params.idUsuario;
+  });
+
+  res.send('Operação efeutada com sucesso!');
 });
 
 app.listen(port, () => {
