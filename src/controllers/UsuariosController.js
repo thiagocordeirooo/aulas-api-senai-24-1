@@ -3,6 +3,9 @@ import ConexaoMySql from '../database/ConexaoMySql.js';
 class UsuariosController {
   async listar(req, resp) {
     try {
+      const idUsuarioLogado = req.headers['x-usuario-logado']; // pega o usuário logado do header
+      console.log({ idUsuarioLogado });
+
       const filtro = req.query.filtro || '';
       const conexao = await new ConexaoMySql().getConexao();
       const sql = 'SELECT * FROM usuarios WHERE nome LIKE ?';
@@ -30,11 +33,7 @@ class UsuariosController {
 
       const conexao = await new ConexaoMySql().getConexao();
       const sql = 'INSERT INTO usuarios (nome, email, senha) VALUES (?,?,md5(?))';
-      const [resultado] = await conexao.execute(sql, [
-        novoUsuario.nome,
-        novoUsuario.email,
-        novoUsuario.senha,
-      ]);
+      const [resultado] = await conexao.execute(sql, [novoUsuario.nome, novoUsuario.email, novoUsuario.senha]);
 
       resp.send({ resultado });
     } catch (error) {
@@ -53,11 +52,7 @@ class UsuariosController {
 
       const conexao = await new ConexaoMySql().getConexao();
       const sql = 'UPDATE usuarios SET nome = ?, email = ? WHERE id = ?';
-      const [resultado] = await conexao.execute(sql, [
-        usuarioEditar.nome,
-        usuarioEditar.email,
-        usuarioEditar.id,
-      ]);
+      const [resultado] = await conexao.execute(sql, [usuarioEditar.nome, usuarioEditar.email, usuarioEditar.id]);
 
       resp.send({ resultado });
     } catch (error) {
